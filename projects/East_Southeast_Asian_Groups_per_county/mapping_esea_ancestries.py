@@ -22,7 +22,6 @@ import requests
 import geopandas as gpd
 import pandas as pd
 
-
 ###Open County data
 
 from osgeo import gdal
@@ -110,28 +109,6 @@ formtted_df.to_csv('formtted_df.csv')
 files.download('formtted_df.csv')
 '''
 
-###Merge Data
-
-#print(counties_gdf)
-# https://geopandas.org/en/stable/docs/user_guide/io.html
-counties_gdf_xls = gpd.read_file("cb_2024_us_county_500k.dbf")
-print(counties_gdf_xls.columns)
-print(formtted_df.columns)
-
-gdf = counties_gdf_xls.merge(formtted_df, on="GEOIDFQ", how="inner")
-
-print("post merge:")
-print(gdf.columns)
-#print(gdf.head())
-
-'''
-gdf = gdf.to_crs(9311)
-gdf.to_file("data/EastSoutheast_Asian_Groups_Per_County.gpkg")
-'''
-gdf.groupby("most_common_ancestry").size().reset_index(name="COUNT").sort_values(
-    "COUNT", ascending=False
-)
-
 """https://www.arcgis.com/apps/mapviewer/index.html?url=https://geo.dot.gov/server/rest/services/Hosted/County_cb_2018_us_state_500k/FeatureServer&source=sd this is pretty cool
 
 https://catalog.data.gov/dataset/2024-cartographic-boundary-file-shp-county-and-equivalent-for-united-states-1-500000
@@ -144,4 +121,55 @@ https://pdxedu.maps.arcgis.com/apps/mapviewer/index.html using 2019 login info t
 
 just used the .dbf spreadsheet from the zip file that contains GEO_ID columns, reran that code snippet and got the following error:
 > ValueError: Cannot transform naive geometries.  Please set a crs on the object first.
+
+https://stackoverflow.com/questions/64421284/geopandas-valueerror-cannot-transform-naive-geometries-please-set-a-crs-on-t
+"""
+
+###Merge Data
+
+#print(counties_gdf)
+# https://geopandas.org/en/stable/docs/user_guide/io.html
+counties_gdf_xls = gpd.read_file("cb_2024_us_county_500k.dbf")
+#print(counties_gdf_xls.columns)
+#print(formtted_df.columns)
+
+gdf = counties_gdf_xls.merge(formtted_df, on="GEOIDFQ", how="inner")
+
+print("post merge:")
+print(gdf.columns)
+#print(gdf.head())
+
+'''
+#gdf.set_crs('epsg:3857')
+gdf = gdf.to_crs(9311)
+'''
+
+#https://stackoverflow.com/questions/11250870/sqlite3-open-unable-to-open-database-file
+#sqlite3_open_v2("data/EastSoutheast_Asian_Groups_Per_County.gpkg", &db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
+
+#https://gis.stackexchange.com/questions/298530/how-do-i-write-a-geopandas-dataframe-into-a-single-file-preferably-json-or-geop
+gdf.to_file("output.json", driver="GeoJSON")
+#gdf.to_file("data/EastSoutheast_Asian_Groups_Per_County.gpkg")
+
+gdf.groupby("most_common_ancestry").size().reset_index(name="COUNT").sort_values(
+    "COUNT", ascending=False
+)
+
+#print(gdf[['NAME','STATE_NAME','GEOIDFQ','most_common_ancestry']])
+
+"""https://gis.stackexchange.com/questions/298530/how-do-i-write-a-geopandas-dataframe-into-a-single-file-preferably-json-or-geop
+
+https://geoconverter.mikoding.com/
+
+https://doc.arcgis.com/en/arcgis-online/manage-data/publish-features.htm#ESRI_SECTION1_49CE0570C3BA4AD8BF2DB28929FF7280
+
+https://doc.arcgis.com/en/arcgis-online/get-started/print-maps-mv.htm
+
+ArcGIS mapping steps I used
+
+create new map
+upload .zip file as base layer
+upload output.json (GeoJSON file) as 2nd layer (of data)
+
+to change visibility of layers (e.g. changing color intensity, making sure county lines are visible in black)- I clicked on the layer to select it, then the Properties button in the tab on the right (top button), and clicked through the Appearance drop through until I was able to change it to my liking.
 """
